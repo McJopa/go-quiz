@@ -12,8 +12,7 @@ func main() {
 	flag.Parse()
 	
 	questions, ans := parseCSV(input)
-	fmt.Printf("%v", questions)
-	fmt.Printf("%v", ans)
+	quiz(questions, ans)
 }
 
 func parseCSV(input *string) ([]string, []string){
@@ -39,4 +38,17 @@ func parseCSV(input *string) ([]string, []string){
 	}
 
 	return questions, ans
+}
+
+func quiz (questions []string, ans []string) {
+	correct := 0
+	for i := range questions {
+		fmt.Println(questions[i])
+		var input string
+		fmt.Scanln(&input)
+		if input == ans[i] {
+			correct += 1
+		}
+	}
+	fmt.Printf("score: %d/%d\n", correct, len(questions))
 }
