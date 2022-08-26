@@ -8,7 +8,7 @@ import (
 )
 
 func main() {
-	csvFilename := flag.String("csv", "problems.csv", "specify csv of questions and answers with format 'question,answer;'") 
+	csvFilename := flag.String("csv", "problems.csv", "specify csv of questions and answers with format 'question,answer'") 
 	time := flag.Int("time", 30, "quiz length time") 
 	flag.Parse()
 	questions, ans := parseCSV(csvFilename)
