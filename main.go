@@ -4,51 +4,61 @@ import (
 	"flag"
 	"encoding/csv"
 	"os"
-	"log"
+	"time"
 )
 
 func main() {
-	input := flag.String("i", "problems.csv", "specify csv file for input") 
+	csvFilename := flag.String("csv", "problems.csv", "specify csv of questions and answers with format 'question,answer;'") 
+	time := flag.Int("time", 30, "quiz length time") 
 	flag.Parse()
-	
-	questions, ans := parseCSV(input)
-	quiz(questions, ans)
+	questions, ans := parseCSV(csvFilename)
+	quiz(time, questions, ans)
 }
 
-func parseCSV(input *string) ([]string, []string){
-	var questions []string
-	var ans []string
-
-	f, err := os.Open(*input)
-
-	if err != nil {  
-		log.Fatal(err)
+func parseCSV(csvFilename *string) ([]string, []string){
+	f, err := os.Open(*csvFilename)
+	if err != nil {
+		fmt.Printf("Failed to open csv file: %s\n", *csvFilename) 
+		os.Exit(1)
 	}
-
 	r := csv.NewReader(f)
 	records, err := r.ReadAll()
 
+	questions := make([]string, len(records))
+	answers := make([]string, len(records))
 	if err != nil {
-		log.Fatal(err)
+		fmt.Printf("Failed to read csv file: %s\n", *csvFilename) 
+		os.Exit(1)
 	}
-
-	for _, record := range records {
-		questions = append(questions, record[0])
-		ans = append(ans, record[1])
+	for i, record := range records {
+		questions[i] = record[0]
+		answers[i] = record[1]
 	}
-
-	return questions, ans
+	return questions, answers
 }
 
-func quiz (questions []string, ans []string) {
-	correct := 0
+func quiz (t *int, questions []string, ans []string) {
+	timer := time.NewTimer(time.Duration(*t) * time.Second)
+	score := 0
 	for i := range questions {
 		fmt.Println(questions[i])
-		var input string
-		fmt.Scanln(&input)
-		if input == ans[i] {
-			correct += 1
+		aChannel := make(chan string)
+		go func (){
+			var input string
+			fmt.Scanln(&input)
+			aChannel <-input
+		}()
+		select {
+		case <-timer.C:
+			fmt.Printf("You scored %d out of %d.\n", score, len(questions))
+			return	
+		case answer := <-aChannel:
+			if answer == ans[i] {
+				score++
+			}
 		}
 	}
-	fmt.Printf("score: %d/%d\n", correct, len(questions))
+	fmt.Printf("You scored %d out of %d.\n", score, len(questions))
+	return
 }
+
